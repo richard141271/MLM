@@ -5,13 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MLM Pro System v2.0</title>
     <link href="css/style.css" rel="stylesheet">
+    <style>
+        /* Extra styles for the admin login separation */
+        .admin-link {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.8rem;
+            color: #ccc;
+            text-decoration: none;
+        }
+        .admin-link:hover { color: var(--primary-color); }
+    </style>
 </head>
 <body>
 
     <!-- Navigation -->
     <nav class="navbar">
         <div class="app-container" style="display: flex; justify-content: space-between; align-items: center; margin: 0 auto;">
-            <a href="#" class="brand">MLM Pro v2</a>
+            <a href="#" class="brand" onclick="location.reload()">MLM Pro v2</a>
             <div id="nav-actions">
                 <!-- Injected via JS -->
             </div>
@@ -21,29 +33,29 @@
     <!-- MAIN APP CONTAINER -->
     <div class="app-container">
         
-        <!-- VIEW: AUTH (Login/Register) -->
+        <!-- VIEW: MEMBER AUTH (Login/Register) -->
         <div id="view-auth" class="">
             <div class="card" style="max-width: 400px; margin: 2rem auto;">
-                <h2 class="text-center" id="auth-title">Velkommen</h2>
+                <h2 class="text-center" id="auth-title">Medlemsportal</h2>
                 <div id="alert-box" class="hidden" style="background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;"></div>
 
                 <!-- Tabs -->
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button class="btn btn-outline" onclick="switchAuthMode('login')">Logg inn</button>
-                    <button class="btn btn-outline" onclick="switchAuthMode('register')">Registrer</button>
+                    <button class="btn btn-outline" id="btn-tab-login" onclick="switchAuthMode('login')">Logg inn</button>
+                    <button class="btn btn-outline" id="btn-tab-register" onclick="switchAuthMode('register')">Bli Medlem</button>
                 </div>
 
                 <form id="auth-form">
                     <div id="field-name" class="hidden">
-                        <label>Navn</label>
-                        <input type="text" id="inp-name" placeholder="Ditt navn">
+                        <label>Ditt Navn</label>
+                        <input type="text" id="inp-name" placeholder="Ola Nordmann">
                     </div>
                     
                     <label>Brukernavn</label>
-                    <input type="text" id="inp-user" placeholder="Brukernavn" required>
+                    <input type="text" id="inp-user" placeholder="Ditt brukernavn" required>
                     
                     <label>Passord</label>
-                    <input type="password" id="inp-pass" placeholder="Passord" required>
+                    <input type="password" id="inp-pass" placeholder="Ditt passord" required>
 
                     <div id="field-sponsor" class="hidden">
                         <label>Sponsor ID (Valgfri)</label>
@@ -52,6 +64,30 @@
 
                     <button type="submit" class="btn btn-primary" id="btn-submit">Logg inn</button>
                 </form>
+            </div>
+            
+            <!-- Hidden Admin Link -->
+            <a href="#" class="admin-link" onclick="app.showAdminLogin()">Admin Login</a>
+        </div>
+
+        <!-- VIEW: ADMIN LOGIN -->
+        <div id="view-admin-login" class="hidden">
+            <div class="card" style="max-width: 400px; margin: 2rem auto; border: 2px solid var(--primary-color);">
+                <h2 class="text-center" style="color: var(--primary-color);">Administrator</h2>
+                <p class="text-center text-muted">Kun for systemadministratorer</p>
+                
+                <form id="admin-login-form">
+                    <label>Admin Brukernavn</label>
+                    <input type="text" id="admin-user" placeholder="Admin brukernavn" required>
+                    
+                    <label>Passord</label>
+                    <input type="password" id="admin-pass" placeholder="Passord" required>
+
+                    <button type="submit" class="btn btn-primary">Logg inn som Admin</button>
+                </form>
+                <div class="text-center" style="margin-top: 1rem;">
+                    <a href="#" onclick="app.showAuth()">← Tilbake til medlemsportal</a>
+                </div>
             </div>
         </div>
 
@@ -63,9 +99,13 @@
                     <h3>Hei, <span id="dash-name">User</span>!</h3>
                     <p class="text-muted">Din ID: <strong id="dash-id">...</strong></p>
                     <div style="background: #e0e7ff; padding: 10px; border-radius: 6px; margin-top: 10px;">
-                        <small>Din vervelink:</small><br>
-                        <input type="text" id="ref-link" readonly onclick="this.select()" style="margin: 5px 0;">
+                        <small>Din vervelink (Del denne):</small><br>
+                        <input type="text" id="ref-link" readonly onclick="this.select()" style="margin: 5px 0; font-size: 0.9rem;">
                         <button class="btn btn-primary" onclick="copyLink()">Kopier Link</button>
+                        <p style="font-size: 0.75rem; color: #666; margin-top: 5px;">
+                            * Dette er en lokal link. Når du legger siden ut på nettet vil den se ut som: 
+                            <br><code>www.dittdomene.no/?ref=<span id="dash-ref-id">ID</span></code>
+                        </p>
                     </div>
                 </div>
 
@@ -82,7 +122,7 @@
                 <h3>Handlinger</h3>
                 <div class="flex-grid">
                     <button class="btn btn-success" onclick="app.showStore()">Gå til Nettbutikk</button>
-                    <button class="btn btn-danger hidden" id="btn-admin-panel" onclick="app.showAdmin()">Åpne Admin Panel</button>
+                    <!-- Admin button removed from member dashboard -->
                 </div>
             </div>
 
@@ -110,28 +150,29 @@
             </div>
         </div>
 
-        <!-- VIEW: ADMIN -->
-        <div id="view-admin" class="hidden">
-            <button class="btn btn-outline" onclick="app.showDashboard()">← Tilbake til Dashboard</button>
+        <!-- VIEW: ADMIN DASHBOARD -->
+        <div id="view-admin-dash" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>Admin Kontrollpanel</h2>
+                <button class="btn btn-outline" style="width: auto;" onclick="logout()">Logg ut</button>
+            </div>
             
-            <div class="card" style="border: 2px solid var(--primary-color); margin-top: 20px;">
-                <h2 style="color: var(--primary-color);">Admin Kontrollpanel</h2>
-                
+            <div class="card" style="border: 2px solid var(--primary-color);">
                 <div class="flex-grid">
                     <div class="col">
-                        <h4>System Simulator</h4>
-                        <p>Klikk her for å teste at provisjoner fungerer.</p>
+                        <h4 style="color: var(--primary-color);">⚡ System Simulator (Test-Data)</h4>
+                        <p>Klikk her for å generere falske medlemmer og teste provisjoner automatisk.</p>
                         <button class="btn btn-primary" onclick="runSimulation()">Kjør Full Systemtest (5 Ledd)</button>
                         <div id="sim-result" style="margin-top: 10px; font-size: 0.9rem;"></div>
                     </div>
                     <div class="col">
-                        <h4>Nullstill</h4>
+                        <h4>Nullstill System</h4>
                         <button class="btn btn-danger" onclick="resetAll()">Slett ALT og start på nytt</button>
                     </div>
                 </div>
 
                 <h4 class="mt-4">Alle Brukere i Systemet</h4>
-                <div id="admin-user-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee;">
+                <div id="admin-user-list" style="max-height: 400px; overflow-y: auto; border: 1px solid #eee;">
                     <!-- List -->
                 </div>
             </div>
@@ -146,19 +187,24 @@
             currentUser: null,
             
             init: function() {
-                // Check for Ref Link immediately
+                // Check URL params
                 const urlParams = new URLSearchParams(window.location.search);
                 const ref = urlParams.get('ref');
-                
+                const adminMode = urlParams.get('admin');
+
                 // Check Session
                 const stored = localStorage.getItem('mlm_session');
                 if (stored) {
                     const user = mlmApp.getUser(stored);
                     if (user) {
                         this.loginSuccess(user);
-                    } else {
-                        this.showAuth(ref);
+                        return;
                     }
+                }
+                
+                // No session
+                if (adminMode) {
+                    this.showAdminLogin();
                 } else {
                     this.showAuth(ref);
                 }
@@ -179,10 +225,20 @@
                 }
             },
 
+            showAdminLogin: function() {
+                this.hideAllViews();
+                document.getElementById('view-admin-login').classList.remove('hidden');
+            },
+
             loginSuccess: function(user) {
                 this.currentUser = user;
                 localStorage.setItem('mlm_session', user.id);
-                this.showDashboard();
+                
+                if (user.role === 'admin') {
+                    this.showAdminDash();
+                } else {
+                    this.showDashboard();
+                }
             },
 
             showDashboard: function() {
@@ -195,24 +251,18 @@
                 // Fill Data
                 document.getElementById('dash-name').innerText = this.currentUser.name;
                 document.getElementById('dash-id').innerText = this.currentUser.id;
+                document.getElementById('dash-ref-id').innerText = this.currentUser.id;
                 
                 // Refresh fresh data from DB
                 const freshUser = mlmApp.getUser(this.currentUser.id);
-                this.currentUser = freshUser; // Update local state
+                this.currentUser = freshUser; 
                 
                 document.getElementById('dash-earnings').innerText = freshUser.totalEarnings.toFixed(2) + ' NOK';
                 document.getElementById('dash-balance').innerText = freshUser.balance.toFixed(2);
 
-                // Ref Link
+                // Ref Link Construction
                 const url = window.location.href.split('?')[0];
                 document.getElementById('ref-link').value = `${url}?ref=${freshUser.id}`;
-
-                // Admin Button
-                if (freshUser.role === 'admin') {
-                    document.getElementById('btn-admin-panel').classList.remove('hidden');
-                } else {
-                    document.getElementById('btn-admin-panel').classList.add('hidden');
-                }
 
                 // Lists
                 this.renderDownline(freshUser.id);
@@ -233,28 +283,30 @@
                 `).join('');
             },
 
-            showAdmin: function() {
+            showAdminDash: function() {
                 this.hideAllViews();
-                document.getElementById('view-admin').classList.remove('hidden');
+                document.getElementById('view-admin-dash').classList.remove('hidden');
                 
                 // Render User List
                 const users = mlmApp.getFullGenealogy();
                 document.getElementById('admin-user-list').innerHTML = users.map(u => `
                     <div class="list-item">
                         <div>
-                            <strong>${u.name}</strong> (${u.role})<br>
-                            <small>Sponsor: ${u.sponsorId || 'Ingen'}</small>
+                            <strong>${u.name}</strong> <span style="font-size:0.8rem; background:#eee; padding:2px 5px; border-radius:4px;">${u.role}</span><br>
+                            <small>ID: ${u.id} | Sponsor: ${u.sponsorId || 'Ingen'}</small>
                         </div>
-                        <div>
-                            Tjent: ${u.totalEarnings} kr
+                        <div class="text-center">
+                            <small>Saldo / Totalt</small><br>
+                            <strong>${u.balance.toFixed(0)} / ${u.totalEarnings.toFixed(0)}</strong>
                         </div>
                     </div>
                 `).join('');
             },
 
             hideAllViews: function() {
-                ['view-auth', 'view-dashboard', 'view-store', 'view-admin'].forEach(id => {
-                    document.getElementById(id).classList.add('hidden');
+                ['view-auth', 'view-admin-login', 'view-dashboard', 'view-store', 'view-admin-dash'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.classList.add('hidden');
                 });
             },
 
@@ -273,10 +325,7 @@
             },
 
             renderHistory: function() {
-                // Get transactions where I received commission OR I bought something
                 const data = mlmApp.getData();
-                // Filter logic can be improved, for now just show last 5 global for demo
-                // In real app: filter by currentUser.id in commissions or userId
                 const myActivity = data.transactions.filter(t => 
                     t.userId === this.currentUser.id || 
                     t.commissions.some(c => c.receiverId === this.currentUser.id)
@@ -286,11 +335,9 @@
                 if (myActivity.length === 0) el.innerHTML = '<p class="text-muted">Ingen transaksjoner.</p>';
                 else {
                     el.innerHTML = myActivity.map(t => {
-                        // Did I buy?
                         if (t.userId === this.currentUser.id) {
                             return `<div class="list-item"><div>Du kjøpte <strong>${t.productName}</strong></div><small>-${t.amount}</small></div>`;
                         }
-                        // Did I earn?
                         const comm = t.commissions.find(c => c.receiverId === this.currentUser.id);
                         if (comm) {
                             return `<div class="list-item"><div>Provisjon fra <strong>${t.userName}</strong> (Nivå ${comm.level})</div><strong style="color:green">+${comm.amount}</strong></div>`;
@@ -305,18 +352,30 @@
         let authMode = 'login';
         function switchAuthMode(mode) {
             authMode = mode;
-            document.getElementById('auth-title').innerText = mode === 'login' ? 'Logg inn' : 'Ny Konto';
+            document.getElementById('auth-title').innerText = mode === 'login' ? 'Logg inn Medlem' : 'Bli Medlem';
             document.getElementById('btn-submit').innerText = mode === 'login' ? 'Logg inn' : 'Registrer meg';
             
-            if (mode === 'register') {
-                document.getElementById('field-name').classList.remove('hidden');
-                document.getElementById('field-sponsor').classList.remove('hidden');
-            } else {
+            // Toggle active button style
+            if(mode === 'login') {
+                document.getElementById('btn-tab-login').classList.add('btn-primary');
+                document.getElementById('btn-tab-login').classList.remove('btn-outline');
+                document.getElementById('btn-tab-register').classList.add('btn-outline');
+                document.getElementById('btn-tab-register').classList.remove('btn-primary');
+                
                 document.getElementById('field-name').classList.add('hidden');
                 document.getElementById('field-sponsor').classList.add('hidden');
+            } else {
+                document.getElementById('btn-tab-register').classList.add('btn-primary');
+                document.getElementById('btn-tab-register').classList.remove('btn-outline');
+                document.getElementById('btn-tab-login').classList.add('btn-outline');
+                document.getElementById('btn-tab-login').classList.remove('btn-primary');
+                
+                document.getElementById('field-name').classList.remove('hidden');
+                document.getElementById('field-sponsor').classList.remove('hidden');
             }
         }
 
+        // Member Login/Register
         document.getElementById('auth-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const user = document.getElementById('inp-user').value;
@@ -324,7 +383,14 @@
             
             if (authMode === 'login') {
                 const res = mlmApp.login(user, pass);
-                if (res.success) app.loginSuccess(res.user);
+                if (res.success) {
+                    if (res.user.role === 'admin') {
+                        alert('Administrator må bruke Admin-login siden.');
+                        app.showAdminLogin();
+                    } else {
+                        app.loginSuccess(res.user);
+                    }
+                }
                 else alert(res.message);
             } else {
                 const name = document.getElementById('inp-name').value;
@@ -335,9 +401,27 @@
             }
         });
 
+        // Admin Login
+        document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('admin-user').value;
+            const pass = document.getElementById('admin-pass').value;
+            
+            const res = mlmApp.login(user, pass);
+            if (res.success) {
+                if (res.user.role !== 'admin') {
+                    alert('Ingen tilgang. Du er ikke administrator.');
+                } else {
+                    app.loginSuccess(res.user);
+                }
+            } else {
+                alert(res.message);
+            }
+        });
+
         function logout() {
             localStorage.removeItem('mlm_session');
-            window.location.href = window.location.href.split('?')[0]; // Clear ref params
+            window.location.href = window.location.href.split('?')[0]; 
         }
 
         function buyProduct(pid) {
@@ -345,7 +429,8 @@
                 const res = mlmApp.purchaseProduct(app.currentUser.id, pid);
                 if (res.success) {
                     alert(res.message);
-                    app.showDashboard();
+                    // Refresh data
+                    app.showDashboard(); 
                 } else {
                     alert(res.message);
                 }
@@ -363,16 +448,16 @@
         function runSimulation() {
             const res = mlmApp.runSimulation();
             document.getElementById('sim-result').innerHTML = `
-                <div style="background:#ecfdf5; color:#065f46; padding:10px; border-radius:6px;">
-                    <strong>${res.message}</strong><br>
-                    Sjekk brukerlisten under for å se saldoene oppdatert.
+                <div style="background:#ecfdf5; color:#065f46; padding:10px; border-radius:6px; border: 1px solid #10b981;">
+                    <strong>✅ ${res.message}</strong><br>
+                    <small>Systemet har nå generert brukere og kjøp. Sjekk listen under.</small>
                 </div>
             `;
-            app.showAdmin(); // Refresh list
+            app.showAdminDash(); 
         }
 
         function resetAll() {
-            if(confirm('Er du helt sikker?')) {
+            if(confirm('ADVARSEL: Dette sletter ALLE brukere og transaksjoner. Er du sikker?')) {
                 mlmApp.resetSystem();
                 logout();
             }
@@ -380,6 +465,9 @@
 
         // Start App
         app.init();
+        
+        // Default to login tab
+        switchAuthMode('login');
 
     </script>
 </body>
