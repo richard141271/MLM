@@ -167,7 +167,7 @@
                     <li class="nav-item"><a class="nav-link" href="store.html">Nettbutikk</a></li>
                 `;
                 if (currentUser.role === 'admin') {
-                    html += `<li class="nav-item"><a class="nav-link" href="admin.html">Admin Panel</a></li>`;
+                    html += `<li class="nav-item"><a class="nav-link btn btn-danger text-white ms-2" href="admin.html">ADMIN PANEL</a></li>`;
                 }
                 html += `<li class="nav-item"><a class="nav-link btn btn-outline-danger ms-2" href="#" onclick="logout()">Logg ut</a></li>`;
                 navLinks.innerHTML = html;
@@ -185,7 +185,12 @@
             // Populate Data
             document.getElementById('userNameDisplay').innerText = currentUser.name;
             document.getElementById('userIdDisplay').innerText = currentUser.id;
-            document.getElementById('referralLink').innerText = window.location.origin + '/index.html?ref=' + currentUser.id;
+            
+            // Correct Referral Link Generation
+            const baseUrl = window.location.href.split('?')[0];
+            // Ensure we point to the MLM folder if not already there (for local/gh-pages consistency)
+            const refLink = `${baseUrl}?ref=${currentUser.id}`;
+            document.getElementById('referralLink').innerHTML = `<a href="${refLink}" target="_blank">${refLink}</a>`;
             
             document.getElementById('totalEarningsDisplay').innerText = currentUser.totalEarnings.toFixed(2) + ' NOK';
             document.getElementById('balanceDisplay').innerText = currentUser.balance.toFixed(2) + ' NOK';
@@ -194,13 +199,20 @@
             const downline = mlmApp.getDownline(currentUser.id);
             const genealogyList = document.getElementById('genealogyList');
             if (downline.length === 0) {
-                genealogyList.innerHTML = '<p class="text-muted">Ingen vervet enda.</p>';
+                genealogyList.innerHTML = '<p class="text-muted">Ingen vervet enda. Del lenken din for å starte!</p>';
             } else {
-                let html = '<ul class="list-group">';
+                let html = `<div class="alert alert-info">Du har vervet <strong>${downline.length}</strong> personer direkte.</div>`;
+                html += '<ul class="list-group">';
                 downline.forEach(member => {
-                    html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                        ${member.name} (@${member.username})
-                        <span class="badge bg-primary rounded-pill">Nivå 1</span>
+                    html += `<li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${member.name}</strong> <br>
+                                <small class="text-muted">Brukernavn: ${member.username}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">Nivå 1</span>
+                        </div>
+                        <div class="small text-muted mt-1">Registrert: ${new Date(member.joinedAt).toLocaleDateString()}</div>
                     </li>`;
                 });
                 html += '</ul>';
@@ -249,9 +261,22 @@
         // Check URL params for ref
         const urlParams = new URLSearchParams(window.location.search);
         const ref = urlParams.get('ref');
+        
+        // Auto-switch to register tab if ref is present
         if (ref) {
             document.getElementById('regSponsor').value = ref;
-            document.getElementById('register-tab').click();
+            // Wait for Bootstrap to initialize
+            setTimeout(() => {
+                const triggerEl = document.querySelector('#register-tab');
+                const tab = new bootstrap.Tab(triggerEl);
+                tab.show();
+                
+                // Visual feedback
+                const container = document.getElementById('authContainer');
+                container.insertAdjacentHTML('afterbegin', 
+                    '<div class="alert alert-success">Du har blitt invitert! Registrer deg nedenfor for å komme i gang.</div>'
+                );
+            }, 500);
         }
     </script>
 </body>
