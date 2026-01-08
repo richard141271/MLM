@@ -1,45 +1,47 @@
 /**
- * MLM System Core Logic
- * Handles data persistence, user management, and commission calculations.
+ * MLM Pro System - Core Logic v2.0
+ * Rebuilt for robustness, transparency, and simulation capabilities.
  */
 
 class MLMSystem {
     constructor() {
-        this.dbName = 'mlm_db_v1';
+        this.dbName = 'mlm_db_v2';
         this.init();
     }
 
-    // Initialize database if empty
     init() {
         if (!localStorage.getItem(this.dbName)) {
-            const initialData = {
-                users: [
-                    // Root user (The Company/Admin)
-                    { 
-                        id: 'root', 
-                        username: 'admin', 
-                        password: 'admin', 
-                        name: 'System Admin', 
-                        sponsorId: null, 
-                        balance: 0, 
-                        totalEarnings: 0,
-                        role: 'admin',
-                        joinedAt: new Date().toISOString()
-                    }
-                ],
-                products: [
-                    { id: 'p1', name: 'Startpakke', price: 1000, commissionable: true },
-                    { id: 'p2', name: 'Helsekost', price: 500, commissionable: true },
-                    { id: 'sub1', name: 'Månedlig Abonnement', price: 200, isSubscription: true, commissionable: true }
-                ],
-                settings: {
-                    commissionRates: [10, 5, 3, 2, 1], // Percentage for level 1 to 5
-                    currency: 'NOK'
-                },
-                transactions: []
-            };
-            this.saveData(initialData);
+            this.resetSystem();
         }
+    }
+
+    resetSystem() {
+        const initialData = {
+            users: [
+                { 
+                    id: 'root', 
+                    username: 'admin', 
+                    password: 'admin', 
+                    name: 'System Admin', 
+                    sponsorId: null, 
+                    balance: 0, 
+                    totalEarnings: 0,
+                    role: 'admin',
+                    joinedAt: new Date().toISOString()
+                }
+            ],
+            products: [
+                { id: 'p1', name: 'Startpakke', price: 1000, commissionable: true },
+                { id: 'p2', name: 'Helsekost', price: 500, commissionable: true },
+                { id: 'sub1', name: 'Månedlig Abonnement', price: 200, isSubscription: true, commissionable: true }
+            ],
+            settings: {
+                commissionRates: [10, 5, 3, 2, 1], // Level 1 to 5 (%)
+            },
+            transactions: []
+        };
+        this.saveData(initialData);
+        console.log("System initialized/reset.");
     }
 
     getData() {
@@ -50,7 +52,14 @@ class MLMSystem {
         localStorage.setItem(this.dbName, JSON.stringify(data));
     }
 
-    // --- User Management ---
+    // --- Authentication ---
+
+    login(username, password) {
+        const data = this.getData();
+        const user = data.users.find(u => u.username === username && u.password === password);
+        if (user) return { success: true, user };
+        return { success: false, message: 'Feil brukernavn eller passord.' };
+    }
 
     registerUser(username, password, name, sponsorId) {
         const data = this.getData();
@@ -59,17 +68,19 @@ class MLMSystem {
             return { success: false, message: 'Brukernavn er opptatt.' };
         }
 
-        const sponsor = data.users.find(u => u.id === sponsorId);
-        if (!sponsor && sponsorId !== null) {
-            return { success: false, message: 'Sponsor finnes ikke.' };
+        // Validate Sponsor
+        let sponsor = data.users.find(u => u.id === sponsorId);
+        if (!sponsor) {
+            console.warn(`Sponsor ${sponsorId} not found, defaulting to root.`);
+            sponsorId = 'root';
         }
 
         const newUser = {
-            id: 'u_' + Date.now(),
+            id: 'u_' + Math.floor(Math.random() * 1000000),
             username,
             password,
             name,
-            sponsorId: sponsorId || 'root', // Default to root if no sponsor provided
+            sponsorId: sponsorId,
             balance: 0,
             totalEarnings: 0,
             role: 'member',
@@ -81,101 +92,110 @@ class MLMSystem {
         return { success: true, user: newUser };
     }
 
-    login(username, password) {
-        const data = this.getData();
-        const user = data.users.find(u => u.username === username && u.password === password);
-        if (user) return { success: true, user };
-        return { success: false, message: 'Feil brukernavn eller passord.' };
-    }
-
-    getUser(id) {
-        return this.getData().users.find(u => u.id === id);
-    }
+    // --- Core Business Logic ---
 
     getDownline(userId) {
         const data = this.getData();
-        // Simple direct recruits find
+        // Return direct recruits
         return data.users.filter(u => u.sponsorId === userId);
     }
 
-    // --- Shop & Commission System ---
-
-    getProducts() {
-        return this.getData().products;
+    // Recursive function to get full tree (for admin)
+    getFullGenealogy() {
+        const data = this.getData();
+        // A simple flat list for now, but could be built into a tree
+        return data.users;
     }
 
-    // The Core 5-Level Commission Algorithm
     purchaseProduct(userId, productId) {
         const data = this.getData();
         const buyer = data.users.find(u => u.id === userId);
         const product = data.products.find(p => p.id === productId);
 
-        if (!buyer || !product) return { success: false, message: 'Ugyldig kjøp.' };
+        if (!buyer || !product) return { success: false, message: 'Feil ved kjøp.' };
 
-        // Record the transaction
+        // 1. Record Transaction
         const transaction = {
-            id: 'tx_' + Date.now(),
+            id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
             userId,
+            userName: buyer.name,
             productId,
+            productName: product.name,
             amount: product.price,
             date: new Date().toISOString(),
-            type: product.isSubscription ? 'subscription' : 'purchase'
+            commissions: [] // Store who got what
         };
-        data.transactions.push(transaction);
 
-        // Distribute Commissions
+        // 2. Calculate Commissions (5 Levels)
         let currentSponsorId = buyer.sponsorId;
-        let distributedLog = [];
-
-        // Loop through 5 levels
-        for (let i = 0; i < 5; i++) {
+        
+        for (let level = 0; level < 5; level++) {
             if (!currentSponsorId) break;
 
             const sponsor = data.users.find(u => u.id === currentSponsorId);
             if (!sponsor) break;
 
-            // Get rate for this level
-            const rate = data.settings.commissionRates[i] || 0;
+            const rate = data.settings.commissionRates[level];
             const commissionAmount = (product.price * rate) / 100;
 
             if (commissionAmount > 0) {
                 sponsor.balance += commissionAmount;
                 sponsor.totalEarnings += commissionAmount;
-                
-                distributedLog.push({
-                    level: i + 1,
-                    receiver: sponsor.username,
+
+                transaction.commissions.push({
+                    level: level + 1,
+                    receiverId: sponsor.id,
+                    receiverName: sponsor.name,
                     amount: commissionAmount,
-                    rate: rate + '%'
+                    rate: rate
                 });
             }
 
-            // Move up to the next sponsor
+            // Move up
             currentSponsorId = sponsor.sponsorId;
         }
 
+        data.transactions.unshift(transaction); // Add to top
         this.saveData(data);
-        return { success: true, message: 'Kjøp gjennomført!', commissions: distributedLog };
+        return { success: true, message: 'Kjøp gjennomført!', transaction };
     }
 
-    // --- Admin ---
-    
-    updateSettings(newRates) {
+    // --- Admin Tools ---
+
+    updateSettings(rates) {
         const data = this.getData();
-        data.settings.commissionRates = newRates.map(r => parseFloat(r));
+        data.settings.commissionRates = rates.map(Number);
         this.saveData(data);
-        return { success: true };
     }
 
-    getAllUsers() {
-        return this.getData().users;
-    }
+    // --- Simulator (The "Magic" Button) ---
+    // Creates a 5-level deep structure and triggers a purchase at the bottom
+    runSimulation() {
+        this.resetSystem();
+        
+        // Create a chain: Root -> A -> B -> C -> D -> E
+        const users = ['A', 'B', 'C', 'D', 'E'];
+        let lastSponsorId = 'root';
+        let createdUsers = [];
 
-    resetSystem() {
-        localStorage.removeItem(this.dbName);
-        this.init();
+        users.forEach((name, index) => {
+            const res = this.registerUser(`user${name}`, 'pass', `Medlem ${name}`, lastSponsorId);
+            if (res.success) {
+                lastSponsorId = res.user.id;
+                createdUsers.push(res.user);
+            }
+        });
+
+        // The last user (E) buys a Startpakke (1000 NOK)
+        const buyer = createdUsers[createdUsers.length - 1]; // E
+        const purchaseRes = this.purchaseProduct(buyer.id, 'p1');
+
+        return {
+            success: true,
+            message: "Simulering fullført: Opprettet kjede Root -> A -> B -> C -> D -> E. 'Medlem E' kjøpte Startpakke.",
+            purchaseResult: purchaseRes
+        };
     }
 }
 
-// Global instance
 const mlmApp = new MLMSystem();
