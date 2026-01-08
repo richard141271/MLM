@@ -96,47 +96,63 @@
             <div class="flex-grid">
                 <!-- Profile Card -->
                 <div class="col card">
-                    <h3>Hei, <span id="dash-name">User</span>!</h3>
-                    <p class="text-muted">Din ID: <strong id="dash-id">...</strong></p>
-                    <div style="background: #e0e7ff; padding: 10px; border-radius: 6px; margin-top: 10px;">
-                        <small>Din vervelink (Del denne):</small><br>
-                        <input type="text" id="ref-link" readonly onclick="this.select()" style="margin: 5px 0; font-size: 0.9rem;">
-                        <button class="btn btn-primary" onclick="copyLink()">Kopier Link</button>
-                        <p style="font-size: 0.75rem; color: #666; margin-top: 5px;">
-                            * Dette er en lokal link. Når du legger siden ut på nettet vil den se ut som: 
-                            <br><code>www.dittdomene.no/?ref=<span id="dash-ref-id">ID</span></code>
+                    <h3>👤 Min Profil</h3>
+                    <p class="text-muted">Hei, <strong id="dash-name">User</strong> (ID: <span id="dash-id">...</span>)</p>
+                    
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #e2e8f0;">
+                        <small style="text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; color: #64748b;">🚀 Din Vervelink</small><br>
+                        <div style="display: flex; gap: 5px; margin-top: 5px;">
+                            <input type="text" id="ref-link" readonly onclick="this.select()" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                            <button class="btn btn-primary" onclick="copyLink()" style="width: auto;">Kopier</button>
+                        </div>
+                        <p style="font-size: 0.75rem; color: #666; margin-top: 8px; line-height: 1.4;">
+                            Del denne linken med venner. Når de registrerer seg, havner de automatisk i ditt nettverk!
+                            <br><br>
+                            <em>Preview:</em> <code>www.dittdomene.no/?ref=<span id="dash-ref-id">ID</span></code>
                         </p>
                     </div>
                 </div>
 
                 <!-- Stats Card -->
-                <div class="col stat-box">
-                    <p>Total Inntekt</p>
-                    <div class="stat-value" id="dash-earnings">0 NOK</div>
-                    <p style="margin-top: 10px;">Saldo: <span id="dash-balance">0</span> NOK</p>
+                <div class="col stat-box" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white;">
+                    <h3>💰 Min Lommebok</h3>
+                    <p style="opacity: 0.9;">Total Opptjent</p>
+                    <div class="stat-value" id="dash-earnings" style="color: white;">0 NOK</div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                        <p style="font-size: 0.9rem;">Tilgjengelig Saldo:</p>
+                        <span id="dash-balance" style="font-size: 1.5rem; font-weight: bold;">0</span> <span style="font-size: 1rem;">NOK</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Action Bar -->
             <div class="card">
-                <h3>Handlinger</h3>
+                <h3>⚡ Handlinger</h3>
                 <div class="flex-grid">
-                    <button class="btn btn-success" onclick="app.showStore()">Gå til Nettbutikk</button>
-                    <!-- Admin button removed from member dashboard -->
+                    <button class="btn btn-success" onclick="app.showStore()" style="padding: 1.5rem; font-size: 1.1rem;">
+                        🛒 Gå til Nettbutikk
+                        <br><small style="font-weight: normal; font-size: 0.8rem;">Kjøp produkter og start din reise</small>
+                    </button>
+                    <button class="btn btn-outline" onclick="alert('Du har ingen aktive abonnementer enda.')" style="padding: 1.5rem; font-size: 1.1rem;">
+                        📦 Mine Produkter
+                        <br><small style="font-weight: normal; font-size: 0.8rem;">Se dine kjøp og abonnementer</small>
+                    </button>
                 </div>
             </div>
 
             <div class="flex-grid">
                 <!-- Downline -->
                 <div class="col card">
-                    <h3>Ditt Nettverk (Nivå 1)</h3>
-                    <div id="list-downline">Loading...</div>
+                    <h3>👥 Mitt Nettverk (Nivå 1)</h3>
+                    <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 10px;">Personer du har vervet direkte:</p>
+                    <div id="list-downline" style="max-height: 200px; overflow-y: auto;">Loading...</div>
                 </div>
 
                 <!-- History -->
                 <div class="col card">
-                    <h3>Siste Aktivitet</h3>
-                    <div id="list-activity">Ingen aktivitet.</div>
+                    <h3>📜 Transaksjonshistorikk</h3>
+                    <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 10px;">Dine inntekter og kjøp:</p>
+                    <div id="list-activity" style="max-height: 200px; overflow-y: auto;">Ingen aktivitet.</div>
                 </div>
             </div>
         </div>

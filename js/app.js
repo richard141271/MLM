@@ -190,9 +190,21 @@ class MLMSystem {
         const buyer = createdUsers[createdUsers.length - 1]; // E
         const purchaseRes = this.purchaseProduct(buyer.id, 'p1');
 
+        // Create a detailed log for the admin
+        let log = `<strong>Simulering Resultat:</strong><br>`;
+        log += `1. Opprettet kjede: Root -> A -> B -> C -> D -> E<br>`;
+        log += `2. 'Medlem E' kjøpte Startpakke (1000 kr)<br>`;
+        log += `3. <strong>Provisjonsfordeling:</strong><br>`;
+        
+        if (purchaseRes.transaction && purchaseRes.transaction.commissions) {
+            purchaseRes.transaction.commissions.forEach(c => {
+                log += `- Nivå ${c.level}: ${c.receiverName} fikk <strong>${c.amount} kr</strong> (${c.rate}%)<br>`;
+            });
+        }
+
         return {
             success: true,
-            message: "Simulering fullført: Opprettet kjede Root -> A -> B -> C -> D -> E. 'Medlem E' kjøpte Startpakke.",
+            message: log,
             purchaseResult: purchaseRes
         };
     }
