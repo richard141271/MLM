@@ -1,0 +1,38 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: #2c3e50 !important;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.stat-card h3 {
+    font-size: 2rem;
+    margin: 0;
+}
+
+.genealogy-tree {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.genealogy-item {
+    margin: 5px 0;
+    padding: 5px;
+    border-left: 2px solid #ddd;
+}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLM Pro - Nettbutikk</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">MLM Pro System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="store.html">Nettbutikk</a></li>
+                    <li class="nav-item" id="adminLink"></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 class="mb-4">Produkter & Abonnement</h2>
+        <p class="text-muted">Kjøp her genererer provisjon oppover i systemet (5 ledd).</p>
+        
+        <div class="row" id="productList">
+            <!-- Products injected here -->
+        </div>
+
+        <div class="mt-5">
+            <h4>Siste Kjøpshistorikk</h4>
+            <div id="purchaseLog" class="alert alert-secondary d-none"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Check Auth
+        const storedUser = localStorage.getItem('mlm_user');
+        if (!storedUser) {
+            window.location.href = 'index.html';
+        }
+        const currentUser = JSON.parse(storedUser);
+
+        if (currentUser.role === 'admin') {
+            document.getElementById('adminLink').innerHTML = '<a class="nav-link" href="admin.html">Admin Panel</a>';
+        }
+
+        // Render Products
+        const products = mlmApp.getProducts();
+        const container = document.getElementById('productList');
+        
+        products.forEach(p => {
+            const isSub = p.isSubscription ? '<span class="badge bg-warning text-dark">Abonnement</span>' : '<span class="badge bg-info">Produkt</span>';
+            const html = `
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${p.name}</h5>
+                            <p class="card-text">${isSub}</p>
+                            <h3 class="text-primary">${p.price} NOK</h3>
+                            <p class="small text-muted">Gir provisjon til nettverket.</p>
+                            <button class="btn btn-primary w-100" onclick="buy('${p.id}')">Kjøp Nå</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+
+        function buy(productId) {
+            if (!confirm('Er du sikker på at du vil kjøpe dette?')) return;
+
+            const res = mlmApp.purchaseProduct(currentUser.id, productId);
+            
+            if (res.success) {
+                let logHtml = `<strong>${res.message}</strong><br>Provisjon fordelt:<br><ul>`;
+                res.commissions.forEach(c => {
+                    logHtml += `<li>Nivå ${c.level} (${c.receiver}): ${c.amount} NOK (${c.rate})</li>`;
+                });
+                logHtml += '</ul>';
+                
+                const logDiv = document.getElementById('purchaseLog');
+                logDiv.innerHTML = logHtml;
+                logDiv.classList.remove('d-none');
+                logDiv.classList.add('alert-success');
+            } else {
+                alert(res.message);
+            }
+        }
+    </script>
+</body>
+</html>

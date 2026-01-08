@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLM Pro - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class="container">
+            <a class="navbar-brand" href="#">MLM Pro System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="navLinks">
+                    <!-- Dynamic Links -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Auth Container -->
+    <div class="container mt-5" id="authContainer">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card p-4">
+                    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login" type="button">Logg inn</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register" type="button">Registrer</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="pills-tabContent">
+                        <!-- Login Form -->
+                        <div class="tab-pane fade show active" id="login">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Brukernavn</label>
+                                    <input type="text" class="form-control" id="loginUser" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Passord</label>
+                                    <input type="password" class="form-control" id="loginPass" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Logg inn</button>
+                            </form>
+                        </div>
+                        <!-- Register Form -->
+                        <div class="tab-pane fade" id="register">
+                            <form id="registerForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Navn</label>
+                                    <input type="text" class="form-control" id="regName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Brukernavn</label>
+                                    <input type="text" class="form-control" id="regUser" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Passord</label>
+                                    <input type="password" class="form-control" id="regPass" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Sponsor ID (Hvem vervet deg?)</label>
+                                    <input type="text" class="form-control" id="regSponsor" placeholder="La stå tom for Root" value="root">
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">Registrer</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container (Hidden by default) -->
+    <div class="container mt-4 d-none" id="dashboardContainer">
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <h2>Hei, <span id="userNameDisplay"></span>!</h2>
+                <p class="text-muted">Din ID: <span id="userIdDisplay" class="fw-bold"></span></p>
+                <div class="alert alert-info">
+                    <strong>Din verve-lenke:</strong> <span id="referralLink">https://din-side.com/?ref=...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Stats -->
+            <div class="col-md-4">
+                <div class="stat-card mb-3">
+                    <p>Total Inntekt</p>
+                    <h3 id="totalEarningsDisplay">0 NOK</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 mb-3">
+                    <h5 class="card-title">Saldo</h5>
+                    <h3 class="text-success" id="balanceDisplay">0 NOK</h3>
+                    <small>Tilgjengelig for utbetaling</small>
+                </div>
+            </div>
+             <div class="col-md-4">
+                <div class="card p-3 mb-3">
+                    <h5 class="card-title">Status</h5>
+                    <span class="badge bg-success">Aktiv</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Genealogy -->
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5>Ditt Nettverk (Direkte vervet)</h5>
+                    <div id="genealogyList" class="mt-3">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+             <!-- Recent Activity -->
+            <div class="col-md-6">
+                 <div class="card p-3">
+                    <h5>Siste Transaksjoner</h5>
+                    <ul class="list-group list-group-flush" id="transactionList">
+                        <li class="list-group-item text-muted">Ingen aktivitet enda.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // UI Logic
+        const authContainer = document.getElementById('authContainer');
+        const dashboardContainer = document.getElementById('dashboardContainer');
+        let currentUser = null;
+
+        // Check login session
+        const storedUser = localStorage.getItem('mlm_user');
+        if (storedUser) {
+            currentUser = JSON.parse(storedUser);
+            // Verify user still exists in DB
+            const validUser = mlmApp.getUser(currentUser.id);
+            if(validUser) {
+                currentUser = validUser;
+                showDashboard();
+            } else {
+                logout();
+            }
+        }
+
+        function updateNav() {
+            const navLinks = document.getElementById('navLinks');
+            if (currentUser) {
+                let html = `
+                    <li class="nav-item"><a class="nav-link" href="index.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="store.html">Nettbutikk</a></li>
+                `;
+                if (currentUser.role === 'admin') {
+                    html += `<li class="nav-item"><a class="nav-link" href="admin.html">Admin Panel</a></li>`;
+                }
+                html += `<li class="nav-item"><a class="nav-link btn btn-outline-danger ms-2" href="#" onclick="logout()">Logg ut</a></li>`;
+                navLinks.innerHTML = html;
+            } else {
+                navLinks.innerHTML = '';
+            }
+        }
+        updateNav();
+
+        function showDashboard() {
+            authContainer.classList.add('d-none');
+            dashboardContainer.classList.remove('d-none');
+            updateNav();
+            
+            // Populate Data
+            document.getElementById('userNameDisplay').innerText = currentUser.name;
+            document.getElementById('userIdDisplay').innerText = currentUser.id;
+            document.getElementById('referralLink').innerText = window.location.origin + '/index.html?ref=' + currentUser.id;
+            
+            document.getElementById('totalEarningsDisplay').innerText = currentUser.totalEarnings.toFixed(2) + ' NOK';
+            document.getElementById('balanceDisplay').innerText = currentUser.balance.toFixed(2) + ' NOK';
+
+            // Load Downline
+            const downline = mlmApp.getDownline(currentUser.id);
+            const genealogyList = document.getElementById('genealogyList');
+            if (downline.length === 0) {
+                genealogyList.innerHTML = '<p class="text-muted">Ingen vervet enda.</p>';
+            } else {
+                let html = '<ul class="list-group">';
+                downline.forEach(member => {
+                    html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${member.name} (@${member.username})
+                        <span class="badge bg-primary rounded-pill">Nivå 1</span>
+                    </li>`;
+                });
+                html += '</ul>';
+                genealogyList.innerHTML = html;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('mlm_user');
+            window.location.href = 'index.html';
+        }
+
+        // Login Handler
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = document.getElementById('loginUser').value;
+            const p = document.getElementById('loginPass').value;
+            const res = mlmApp.login(u, p);
+            
+            if (res.success) {
+                currentUser = res.user;
+                localStorage.setItem('mlm_user', JSON.stringify(currentUser));
+                showDashboard();
+            } else {
+                alert(res.message);
+            }
+        });
+
+        // Register Handler
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const u = document.getElementById('regUser').value;
+            const p = document.getElementById('regPass').value;
+            const sponsor = document.getElementById('regSponsor').value;
+
+            const res = mlmApp.registerUser(u, p, name, sponsor);
+            if (res.success) {
+                alert('Registrering vellykket! Du kan nå logge inn.');
+                document.getElementById('login-tab').click();
+            } else {
+                alert(res.message);
+            }
+        });
+        
+        // Check URL params for ref
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('ref');
+        if (ref) {
+            document.getElementById('regSponsor').value = ref;
+            document.getElementById('register-tab').click();
+        }
+    </script>
+</body>
+</html>
