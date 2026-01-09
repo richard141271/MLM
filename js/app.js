@@ -202,6 +202,8 @@ class MLMSystem {
             });
         }
 
+        log += `<br><em>Tips: Logg inn med brukernavn "userC" og passord "pass" for å se saldo.</em>`;
+
         return {
             success: true,
             message: log,
